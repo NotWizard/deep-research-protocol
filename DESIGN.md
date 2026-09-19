@@ -69,6 +69,10 @@ Verifier 使用本地研究空间独立检查 Claim Marker、数字、日期、�
 
 ## 5. 架构
 
+![Deep Research Protocol 总体架构](assets/architecture-overview.png)
+
+图中的 Lead Agent 只负责规划、调度与整合；Research Subagents 独立研究并通过文件交付；Gap Analysis 未通过时重新进入研究，只有完整证据链才能进入无网络访问权限的 Writer。
+
 ```text
 User request
     ↓
@@ -170,6 +174,8 @@ Writer Packet 是研究与写作之间的能力隔离层。只有经过 Lead 审
 Writer 不直接决定来源是否可信，也不在写作阶段新增研究判断。
 
 ## 13. Citation by construction
+
+![Evidence by Construction](assets/evidence-by-construction.png)
 
 草稿中的事实命题使用 `[[C017]]` Claim Marker，而不是让 Writer 自己拼 URL。
 

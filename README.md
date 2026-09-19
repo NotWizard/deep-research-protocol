@@ -2,6 +2,8 @@
 
 An auditable, file-backed Agent Skill for multi-agent deep research and completed-report audits.
 
+![Deep Research Protocol architecture](assets/architecture-overview.png)
+
 The protocol separates four responsibilities:
 
 - Lead Agent plans and integrates.
@@ -18,6 +20,9 @@ deep-research-protocol/
 ├── README.md
 ├── DESIGN.md
 ├── LICENSE
+├── assets/
+│   ├── architecture-overview.png
+│   └── evidence-by-construction.png
 └── skills/
     └── deep-research-protocol/
         ├── SKILL.md
