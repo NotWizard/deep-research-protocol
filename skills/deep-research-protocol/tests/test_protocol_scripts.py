@@ -21,7 +21,25 @@ class ProtocolScriptsTest(unittest.TestCase):
         (run / "registry").mkdir()
         (run / "article").mkdir()
         (run / "writer_packet").mkdir()
-        (run / "state.json").write_text('{"mode":"new"}', encoding="utf-8")
+        (run / "state.json").write_text(
+            json.dumps(
+                {
+                    "mode": "new",
+                    "budgets": {
+                        "max_total_research_workstreams": 20,
+                        "max_gap_research_rounds": 3,
+                        "max_synthesis_return_rounds": 2,
+                    },
+                    "usage": {
+                        "research_workstreams_created": 1,
+                        "gap_research_rounds_completed": 0,
+                        "synthesis_return_rounds_completed": 0,
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        write_jsonl(run / "task_manifest.jsonl", [{"id": "T001"}])
         write_jsonl(
             run / "registry" / "sources.jsonl",
             [{"id": "S001", "title": "Source", "url": "https://example.com", "source_type": "primary", "independence_group": "origin"}],
@@ -73,6 +91,28 @@ class ProtocolScriptsTest(unittest.TestCase):
         run = self.make_run()
         (run / "state.json").write_text('{"mode":"resume"}', encoding="utf-8")
         self.assertIn("invalid mode: 'resume'; expected 'new' or 'audit'", validate(run))
+
+    def test_total_workstream_budget(self) -> None:
+        run = self.make_run()
+        write_jsonl(run / "task_manifest.jsonl", [{"id": f"T{i:03d}"} for i in range(21)])
+        self.assertIn("research workstream budget exceeded", validate(run))
+
+    def test_round_budgets(self) -> None:
+        run = self.make_run()
+        state = json.loads((run / "state.json").read_text(encoding="utf-8"))
+        state["usage"]["gap_research_rounds_completed"] = 4
+        state["usage"]["synthesis_return_rounds_completed"] = 3
+        (run / "state.json").write_text(json.dumps(state), encoding="utf-8")
+        errors = validate(run)
+        self.assertIn("gap-research round budget exceeded", errors)
+        self.assertIn("synthesis-return round budget exceeded", errors)
+
+    def test_writer_request_blocks_publication(self) -> None:
+        run = self.make_run()
+        (run / "article" / "writer_requests.md").write_text(
+            "More evidence is needed for section 3.\n", encoding="utf-8"
+        )
+        self.assertIn("unresolved writer request blocks publication", validate(run, publish=True))
 
     def test_audit_workspace(self) -> None:
         run = self.make_run()

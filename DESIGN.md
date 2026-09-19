@@ -59,7 +59,7 @@ Researcher 不写最终文章，也不能修改其他 Workstream 或全局 Regis
 
 ### Writer
 
-Writer 是断网的证据约束型写作者。它只读取本地 Writer Packet；必要时可以读取已保存的 Raw Capture；禁止搜索、浏览、访问外部 URL 或用模型记忆增加事实。材料不足时生成 `writer_gaps.jsonl`，不能合理猜测。
+Writer 是断网的证据约束型写作者。它只读取本地 Writer Packet；必要时可以读取已保存的 Raw Capture；禁止搜索、浏览、访问外部 URL 或用模型记忆增加事实。需要补研时生成自由格式的 `article/writer_requests.md`，不能合理猜测。
 
 第一版只使用一个 Writer，以保持全文术语、结构和声音一致。只有真实使用证明单个 Writer 成为长报告瓶颈后，才增加章节 Writer。
 
@@ -71,7 +71,7 @@ Verifier 使用本地研究空间独立检查 Claim Marker、数字、日期、�
 
 ![Deep Research Protocol 总体架构](assets/architecture-overview.png)
 
-图中的 Lead Agent 只负责规划、调度与整合；Research Subagents 独立研究并通过文件交付；Gap Analysis 未通过时重新进入研究，只有完整证据链才能进入无网络访问权限的 Writer。
+图中的 Lead Agent 只负责规划、调度与整合；Research Subagents 独立研究并通过文件交付；Gap Analysis 未通过时重新进入研究，只有完整证据链才能进入无网络访问权限的 Writer。Writer 可以发回 Research Request，Verifier 也可以发回 Evidence Issue，但二者都只能请求 Lead 决策，不能自行搜索或调度。
 
 ```text
 User request
@@ -119,6 +119,8 @@ Workstream 不等于一个 Query。它应当能形成相对独立的研究结论
 
 推荐每轮 3–8 个 Workstream。受宿主并发限制时分批执行，而不是把任务重新合并到一个 Agent。
 
+协议只提供三个默认预算：整个研究最多创建 20 个 Research Workstream；正式写作前的 Gap Analysis 最多触发 3 轮回补研究；进入写作后，Writer 或 Verifier 最多共同触发 2 轮 Synthesis Return Research。首轮、Gap 回补、Synthesis 回退、Verifier 请求和替代任务都计入同一个 20 个 Workstream 总额度。并发数由宿主环境决定，不属于协议预算。
+
 ## 7. 并发写入安全
 
 所有 subagent 共享项目文件系统，因此必须避免并发修改同一个 JSONL 文件：
@@ -163,7 +165,7 @@ Critical Claim 的最低结构门槛是：一个直接相关的一手来源，�
 
 第一轮结束后，Lead 不发布“继续深入研究”这样的宽泛指令，而是创建新的定向 Workstream。Gap 包含缺少什么、为什么不足、严重程度、下一步查询和完成条件。
 
-研究停止要求 Critical Gap 为零，或预算确实耗尽且最终报告明确披露不足。预算耗尽不能被记录为研究完成。
+一次 Gap Research Round 可以包含多个 Workstream，从 Lead 派发开始，到这些任务全部整合并重新计算 Coverage 时结束。默认最多进行 3 轮。研究停止要求 Critical Gap 为零，或预算确实耗尽且最终报告明确披露不足。预算耗尽不能被记录为研究完成。
 
 ## 12. Writer Packet
 
@@ -171,7 +173,11 @@ Writer Packet 是研究与写作之间的能力隔离层。只有经过 Lead 审
 
 它包含写作目标、受众、语言和格式，章节结构，每章允许使用的 Claim，Claim 到 Evidence/Source 的映射，必须呈现的矛盾，以及必须披露的限制。
 
-Writer 不直接决定来源是否可信，也不在写作阶段新增研究判断。
+Writer 不直接决定来源是否可信，也不在写作阶段新增事实，但它可以自主判断材料不足或冲突时应当请求补研、保留不确定性、呈现双方、删去不重要判断，还是将问题作为限制披露。协议不为这个判断规定固定决策树。
+
+需要补研时，Writer 使用自由格式的 `article/writer_requests.md` 说明问题和有价值的研究方向。这个文件没有字段或 JSON Schema。Lead 负责判断是否值得研究、合并相关请求、创建新的 Workstream、整合新证据并重建 Writer Packet。Writer 和 Verifier 触发的补研共同使用最多 2 轮 Synthesis Return Research；每轮无论创建几个 Workstream，都同时受总计 20 个 Workstream 的约束。
+
+只要 `writer_requests.md` 仍有非空内容，报告就不能发布。Lead 处理后将决定记录到 `decisions.md`，由 Writer 确认已解决或明确转化为公开限制后再清空请求。
 
 ## 13. Citation by construction
 
@@ -193,7 +199,7 @@ Audit 将报告拆成 Claim/Citation 覆盖、引用支持关系、数字日期�
 
 ## 15. 确定性脚本
 
-`validate_run.py` 检查 JSONL、ID、引用关系、Critical Claim 的结构化证据门槛、Claim Marker 和 Open Critical Gap。
+`validate_run.py` 检查 JSONL、ID、引用关系、Critical Claim 的结构化证据门槛、Claim Marker、Open Critical Gap、三个研究预算，以及是否仍存在未处理的 `writer_requests.md`。
 
 `render_report.py` 把 Claim Marker 转换成 Claim–Evidence–Source 映射得到的 Markdown Footnote。未知 Claim、Evidence 或 Source 会直接失败。
 

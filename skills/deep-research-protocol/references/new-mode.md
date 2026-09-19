@@ -24,6 +24,8 @@ Include, when relevant, facts and definitions, mechanisms and causes, comparison
 
 Write `task_manifest.jsonl`. For each task, create `workstreams/<task-id>/task.md` and `status.json` before spawning its subagent.
 
+Use the default limits from `SKILL.md`: 20 total Research workstreams, 3 gap-research rounds, and 2 synthesis-return rounds. User-approved overrides belong in `state.json`. Do not add separate limits for source count, retries, or parallel workers.
+
 ## Phase 4: Independent research
 
 Spawn a separate Researcher for every workstream using the contract in `subagent-contracts.md`.
@@ -56,12 +58,18 @@ Write gaps to `registry/gaps.jsonl` and contradictions to `registry/contradictio
 
 Create new, narrowly scoped workstreams for the highest-priority open gaps. Do not tell an existing Researcher merely to "research more."
 
-End the loop when the research-complete gate in `SKILL.md` passes. Stop with a qualified outcome if the declared budget is exhausted, preserving all unresolved gaps.
+One gap-research round starts when the Lead dispatches one or more workstreams from a coverage review and ends after their outputs are integrated and coverage is recalculated. Stop after 3 rounds unless the user approves more.
+
+End the loop when the research-complete gate in `SKILL.md` passes. If the total Workstream or round budget is exhausted, ask the user to expand it or stop with a qualified outcome while preserving unresolved gaps.
 
 ## Phase 8: Synthesis and verification
 
 The Lead Agent builds `writer_packet/` from admitted claims only. Spawn one Writer for the first version to preserve voice and terminology. The Writer writes chapter by chapter but remains one role with one evidence boundary.
 
+The Writer judges whether insufficient or conflicting material requires research, can be qualified or presented as uncertainty, should be omitted, or must remain an explicit limitation. When research is needed, the Writer writes a free-form explanation to `article/writer_requests.md` and returns control to the Lead.
+
+The Lead interprets and clusters related requests, decides whether research is warranted, creates bounded workstreams within the shared total budget, integrates new outputs through the normal Evidence Admission path, rebuilds the Writer Packet, and returns it to the Writer. One such cycle is one synthesis-return round, regardless of how many workstreams it contains. Writer- and Verifier-initiated research share the default limit of 2 synthesis-return rounds.
+
 After the draft is complete, spawn an independent Verifier. The Verifier uses only persisted project material and reports findings without silently editing the report.
 
-Route prose, structure, or qualifier errors to the Writer; unsupported or missing evidence to a new Researcher workstream; malformed registries to the Lead Agent; and irreducible uncertainty to explicit disclosure in the report.
+Route prose, structure, or qualifier errors to the Writer; unsupported or missing evidence to the Lead for possible new Research workstreams; malformed registries to the Lead Agent; and irreducible uncertainty to explicit disclosure in the report. The Verifier may initiate the same synthesis-return loop when it finds a material evidence defect.

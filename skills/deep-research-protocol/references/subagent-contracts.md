@@ -56,9 +56,17 @@ Write only claims present in approved_claims.jsonl. Preserve every required
 qualifier. End each factual proposition with approved claim markers such as
 [[C017]].
 
-If approved material is insufficient, do not fill the gap. Write the missing
-requirement to writer_gaps.jsonl, stop the affected section, and return control
-to the Lead Agent. Write only under article/.
+Judge whether insufficient or conflicting material requires additional
+research, can be responsibly qualified or presented as uncertainty, should be
+omitted, or should remain an explicit limitation. Do not hide a material
+conflict or turn contested evidence into a certain claim.
+
+When more research is needed, explain the problem and useful research direction
+in free-form article/writer_requests.md, stop the affected section, and return
+control to the Lead Agent. Use whatever structure communicates the request most
+clearly; there is no required schema. Do not search or dispatch subagents.
+
+Write only under article/.
 ```
 
 ## Verifier contract
@@ -73,7 +81,9 @@ contradiction treatment, cross-section consistency, and required claims missing
 from the draft.
 
 Write findings to audit/final_audit.md. Classify each finding as blocking,
-major, minor, or note, and route it to Writer, Researcher, or Lead Agent.
+major, minor, or note, and route it to Writer, Researcher, or Lead Agent. A
+material evidence defect may be returned to the Lead for a bounded synthesis-
+return research cycle; do not search or dispatch subagents yourself.
 ```
 
 ## Audit subagent contract

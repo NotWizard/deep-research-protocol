@@ -61,6 +61,16 @@ Core invariants:
 7. Budget exhaustion is a stop reason, not evidence of completion.
 8. Missing evidence must remain an explicit gap or unknown.
 
+## Default research budget
+
+Unless the user explicitly approves a larger budget, a `new` run has three limits:
+
+- at most 20 total Research workstreams across initial research, gap follow-ups, synthesis-stage returns, verifier-requested research, and replacement workstreams;
+- at most 3 gap-research rounds before synthesis;
+- at most 2 synthesis-return rounds initiated by the Writer or Verifier after synthesis begins.
+
+Parallelism is determined by the host environment and is not a protocol budget. A round may contain multiple workstreams, but every workstream counts toward the total of 20.
+
 ## Lead Agent workflow
 
 1. Create the run workspace and research contract.
@@ -70,10 +80,10 @@ Core invariants:
 5. Spawn one independent subagent per workstream. Never allow concurrent workers to edit a shared registry.
 6. Wait for all workstreams, then inspect their structured handoffs and status files.
 7. Merge and deduplicate sources, evidence, candidate claims, gaps, and contradictions into `registry/`.
-8. Recalculate coverage. Create targeted follow-up workstreams for unresolved critical gaps.
+8. Recalculate coverage. Create targeted follow-up workstreams for unresolved critical gaps while budget remains.
 9. Enter synthesis only after the research-complete gate passes.
 10. Build `writer_packet/`, spawn the non-browsing Writer, then spawn the Verifier.
-11. Route writing defects back to the Writer and evidence defects back to new research workstreams.
+11. When the Writer or Verifier returns an evidence need, decide whether more research is warranted, cluster related needs into bounded workstreams, dispatch Research subagents within budget, integrate their outputs, rebuild the Writer Packet, and return control to synthesis.
 12. Run the deterministic validator and renderer before delivery.
 
 The Lead Agent may inspect raw captures only to resolve malformed artifacts, duplicate sources, disputed handoffs, or integration errors. It must not use that exception to replace a missing Researcher.
@@ -93,7 +103,11 @@ Writing may begin only when:
 
 Read [references/writing-protocol.md](references/writing-protocol.md) only after the research-complete gate passes.
 
-The Writer may read only persisted project material. It must not use web search, search MCP, browser automation, computer use, external URLs, or model memory as factual support. If the writing packet is insufficient, it writes `writer_gaps.jsonl` and stops the affected section. The Lead Agent then creates a new research workstream.
+The Writer may read only persisted project material. It must not use web search, search MCP, browser automation, computer use, external URLs, or model memory as factual support.
+
+The Writer decides whether insufficient or conflicting material requires more research, can be responsibly qualified or presented as uncertainty, should be omitted, or should remain an explicit limitation. When more research is needed, it explains the need in free-form `article/writer_requests.md`, stops the affected section, and returns control to the Lead Agent. The file has no required schema.
+
+The Lead Agent decides whether to dispatch more research and how many workstreams to create. It must not treat one Writer request as automatically equal to one workstream. After resolving the request, record the decision in `decisions.md`; publishing remains blocked while `article/writer_requests.md` is non-empty.
 
 Every factual proposition in the draft must carry an approved claim marker such as `[[C017]]`. Final source citations are rendered from the claim-evidence graph.
 

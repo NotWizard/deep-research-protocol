@@ -37,6 +37,7 @@ run/
 │   └── limitations.md
 ├── article/
 │   ├── report.draft.md
+│   ├── writer_requests.md
 │   └── report.md
 └── audit/
     └── final_audit.md
@@ -67,8 +68,12 @@ run/
 ## State
 
 ```json
-{"run_id":"2026-09-19-example","mode":"new","phase":"targeted_research","iteration":2,"status":"active","open_critical_gaps":1,"budgets":{"max_search_rounds":8,"max_sources":250,"deadline":null},"stop_reason":null,"next_actions":["Resolve G003 using primary filings"]}
+{"run_id":"2026-09-19-example","mode":"new","phase":"targeted_research","iteration":2,"status":"active","open_critical_gaps":1,"budgets":{"max_total_research_workstreams":20,"max_gap_research_rounds":3,"max_synthesis_return_rounds":2},"usage":{"research_workstreams_created":8,"gap_research_rounds_completed":2,"synthesis_return_rounds_completed":0},"stop_reason":null,"next_actions":["Resolve G003 using primary filings"]}
 ```
+
+These are the only default protocol budgets. Parallelism is host-controlled. Do not add default limits for sources, retries, individual agents, or wall-clock time.
+
+`article/writer_requests.md` is a free-form blocking handoff, not a structured schema. While it contains non-whitespace content, the run is not publishable.
 
 ## Task manifest
 

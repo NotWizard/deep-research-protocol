@@ -10,6 +10,11 @@ import sys
 from pathlib import Path
 
 CLAIM_MARKER = re.compile(r"\[\[(C[0-9A-Za-z_-]+)\]\]")
+DEFAULT_BUDGETS = {
+    "max_total_research_workstreams": 20,
+    "max_gap_research_rounds": 3,
+    "max_synthesis_return_rounds": 2,
+}
 
 
 def load_jsonl(path: Path, errors: list[str]) -> list[dict]:
@@ -91,6 +96,47 @@ def validate(run: Path, publish: bool = False) -> list[str]:
         return validate_audit(run, publish)
 
     errors: list[str] = []
+    raw_budgets = state.get("budgets", {})
+    if not isinstance(raw_budgets, dict):
+        errors.append("budgets must be an object")
+        raw_budgets = {}
+    unsupported = sorted(set(raw_budgets) - set(DEFAULT_BUDGETS))
+    if unsupported:
+        errors.append(f"unsupported budgets: {', '.join(unsupported)}")
+    budgets = DEFAULT_BUDGETS.copy()
+    for name, default in DEFAULT_BUDGETS.items():
+        value = raw_budgets.get(name, default)
+        if type(value) is not int or value < 0:
+            errors.append(f"invalid budget {name}: {value!r}")
+        else:
+            budgets[name] = value
+
+    usage = state.get("usage", {})
+    if not isinstance(usage, dict):
+        errors.append("usage must be an object")
+        usage = {}
+
+    tasks = load_jsonl(run / "task_manifest.jsonl", errors)
+    workstreams_created = usage.get("research_workstreams_created", len(tasks))
+    gap_rounds = usage.get("gap_research_rounds_completed", 0)
+    synthesis_rounds = usage.get("synthesis_return_rounds_completed", 0)
+    counters = {
+        "research_workstreams_created": workstreams_created,
+        "gap_research_rounds_completed": gap_rounds,
+        "synthesis_return_rounds_completed": synthesis_rounds,
+    }
+    for name, value in counters.items():
+        if type(value) is not int or value < 0:
+            errors.append(f"invalid usage counter {name}: {value!r}")
+
+    effective_workstreams = max(len(tasks), workstreams_created) if type(workstreams_created) is int else len(tasks)
+    if effective_workstreams > budgets.get("max_total_research_workstreams", 20):
+        errors.append("research workstream budget exceeded")
+    if type(gap_rounds) is int and gap_rounds > budgets["max_gap_research_rounds"]:
+        errors.append("gap-research round budget exceeded")
+    if type(synthesis_rounds) is int and synthesis_rounds > budgets["max_synthesis_return_rounds"]:
+        errors.append("synthesis-return round budget exceeded")
+
     registry = run / "registry"
     sources = index(load_jsonl(registry / "sources.jsonl", errors), "source", errors)
     evidence = index(load_jsonl(registry / "evidence.jsonl", errors), "evidence", errors)
@@ -155,6 +201,9 @@ def validate(run: Path, publish: bool = False) -> list[str]:
         for gap_id, gap in gaps.items():
             if gap.get("severity") == "critical" and gap.get("status") == "open":
                 errors.append(f"open critical gap: {gap_id}")
+        writer_requests = run / "article" / "writer_requests.md"
+        if writer_requests.exists() and writer_requests.read_text(encoding="utf-8").strip():
+            errors.append("unresolved writer request blocks publication")
 
     return errors
 

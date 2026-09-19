@@ -13,6 +13,8 @@ The protocol separates four responsibilities:
 
 Every handoff is persisted in files, and deterministic scripts validate claim-evidence-source links before publication.
 
+Writer and Verifier can return unresolved evidence needs to the Lead Agent, which may dispatch additional bounded Research workstreams before publication. The default research budget permits 20 total workstreams, 3 gap-research rounds, and 2 synthesis-return rounds.
+
 ## Repository layout
 
 ```text
