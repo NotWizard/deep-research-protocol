@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deep Research Protocol"
+  short_description: "Auditable multi-agent deep research and report audits"
+  default_prompt: "Use $deep-research-protocol to run a new deep research project or audit an existing report."
