@@ -11,6 +11,24 @@ The protocol separates four responsibilities:
 
 Every handoff is persisted in files, and deterministic scripts validate claim-evidence-source links before publication.
 
+## Repository layout
+
+```text
+deep-research-protocol/
+├── README.md
+├── DESIGN.md
+├── LICENSE
+└── skills/
+    └── deep-research-protocol/
+        ├── SKILL.md
+        ├── agents/
+        ├── references/
+        ├── scripts/
+        └── tests/
+```
+
+`README.md` and `DESIGN.md` document the open-source project. The directory under `skills/` is the self-contained Agent Skill and can be installed or copied independently.
+
 ## Modes
 
 - `new`: research a new question through delegated workstreams.
@@ -19,10 +37,10 @@ Every handoff is persisted in files, and deterministic scripts validate claim-ev
 ## Install
 
 ```bash
-npx skills add NotWizard/deep-research-protocol
+npx skills add NotWizard/deep-research-protocol --skill deep-research-protocol
 ```
 
-Or copy/link this repository into your agent's skill directory.
+Or copy/link `skills/deep-research-protocol/` into your agent's skill directory.
 
 ## Use
 
@@ -41,8 +59,8 @@ See [DESIGN.md](DESIGN.md) for the architecture and artifact contracts.
 ## Validate a run
 
 ```bash
-python3 scripts/validate_run.py /path/to/run --publish
-python3 scripts/render_report.py /path/to/run
+python3 skills/deep-research-protocol/scripts/validate_run.py /path/to/run --publish
+python3 skills/deep-research-protocol/scripts/render_report.py /path/to/run
 ```
 
 The scripts use only Python's standard library.

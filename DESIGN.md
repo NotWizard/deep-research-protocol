@@ -10,7 +10,26 @@
 
 > 一个有明确范围、得到证据支持、保留必要限定语并且可以追溯到原始来源的 Claim。
 
-## 2. 用户入口
+## 2. 项目文档与 Skill 的边界
+
+仓库根目录是开源项目的说明层：
+
+```text
+deep-research-protocol/
+├── README.md
+├── DESIGN.md
+├── LICENSE
+└── skills/
+    └── deep-research-protocol/
+```
+
+`README.md` 负责项目介绍、安装和快速使用；`DESIGN.md` 负责解释架构、设计判断和实现边界。二者不是 Skill 执行时必须加载的指令。
+
+`skills/deep-research-protocol/` 是可以被单独复制、安装和分发的完整 Skill，其中包含 `SKILL.md`、运行时 references、脚本和测试。Skill 不能通过相对路径依赖仓库根目录的说明文档，否则被单独安装后会失效。
+
+项目目录和 GitHub 仓库使用小写短横线 `deep-research-protocol`。这是 URL、包目录和 Skill 机器名的常见形式，也符合 Skill 命名规则。对用户展示的标题使用 `Deep Research Protocol`。
+
+## 3. 用户入口
 
 ### `new`
 
@@ -24,7 +43,7 @@
 
 中断后的继续执行属于原模式内部的运行状态，不增加 `resume`。已有报告也不作为 `extend` 入口；要么审计它，要么将其视为新研究中的线索材料。
 
-## 3. 四个角色
+## 4. 四个角色
 
 ### Lead Agent
 
@@ -48,7 +67,7 @@ Writer 是断网的证据约束型写作者。它只读取本地 Writer Packet�
 
 Verifier 使用本地研究空间独立检查 Claim Marker、数字、日期、引语、限定语、矛盾、章节口径和关键遗漏。Verifier 只报告问题，不静默改写文章。
 
-## 4. 架构
+## 5. 架构
 
 ```text
 User request
@@ -88,7 +107,7 @@ Researcher  Researcher  Researcher
                     Final Report
 ```
 
-## 5. 独立 Workstream
+## 6. 独立 Workstream
 
 每个 Researcher 使用独立上下文，可以减少主题之间的上下文污染，也能让研究方向并行执行，并强制每个任务产生可检查的交付物。
 
@@ -96,7 +115,7 @@ Workstream 不等于一个 Query。它应当能形成相对独立的研究结论
 
 推荐每轮 3–8 个 Workstream。受宿主并发限制时分批执行，而不是把任务重新合并到一个 Agent。
 
-## 6. 并发写入安全
+## 7. 并发写入安全
 
 所有 subagent 共享项目文件系统，因此必须避免并发修改同一个 JSONL 文件：
 
@@ -104,7 +123,7 @@ Workstream 不等于一个 Query。它应当能形成相对独立的研究结论
 
 每个 Workstream 都有独立的 `sources.jsonl`、`evidence.jsonl` 和 `candidate_claims.jsonl`。一轮结束后，由 Lead 统一分配全局 ID、归一化 URL、合并重复来源并写入 `registry/`。
 
-## 7. 搜索能力策略
+## 8. 搜索能力策略
 
 研究开始前，Lead 必须检查当前环境实际拥有的能力，而不能根据产品名称猜测。
 
@@ -120,7 +139,7 @@ Workstream 不等于一个 Query。它应当能形成相对独立的研究结论
 
 如果没有 subagent 能力，也必须停止，不能降级成单 Agent 全链路执行。
 
-## 8. 原始语料与 Evidence
+## 9. 原始语料与 Evidence
 
 每个实际使用的来源都保存 Raw Capture。它表示工具真正返回的内容，包括来源 URL、获取时间、读取方式和是否截断。
 
@@ -128,7 +147,7 @@ Evidence 是从 Raw Capture 中提取的最小事实单元，保留 Source ID、
 
 模型总结不能伪装成原文；被截断的页面不能由模型补全；搜索摘要只能作为 Lead。
 
-## 9. Claim–Evidence Graph
+## 10. Claim–Evidence Graph
 
 Evidence 表示来源实际说了什么；Claim 表示研究最终允许主张什么。
 
@@ -136,13 +155,13 @@ Claim 分为 Observation、Inference、Estimate、Forecast、Opinion 和 Unknown
 
 Critical Claim 的最低结构门槛是：一个直接相关的一手来源，或者两个真正独立的高质量来源组。这不自动证明 Evidence 在逻辑上支持 Claim；Verifier 仍然检查 Entailment。
 
-## 10. Gap 驱动研究
+## 11. Gap 驱动研究
 
 第一轮结束后，Lead 不发布“继续深入研究”这样的宽泛指令，而是创建新的定向 Workstream。Gap 包含缺少什么、为什么不足、严重程度、下一步查询和完成条件。
 
 研究停止要求 Critical Gap 为零，或预算确实耗尽且最终报告明确披露不足。预算耗尽不能被记录为研究完成。
 
-## 11. Writer Packet
+## 12. Writer Packet
 
 Writer Packet 是研究与写作之间的能力隔离层。只有经过 Lead 审核、满足证据门槛的 Claim 才能进入。
 
@@ -150,7 +169,7 @@ Writer Packet 是研究与写作之间的能力隔离层。只有经过 Lead 审
 
 Writer 不直接决定来源是否可信，也不在写作阶段新增研究判断。
 
-## 12. Citation by construction
+## 13. Citation by construction
 
 草稿中的事实命题使用 `[[C017]]` Claim Marker，而不是让 Writer 自己拼 URL。
 
@@ -160,13 +179,13 @@ C017 -> E031, E044 -> S008, S013 -> Markdown footnotes
 
 引用在 Evidence 提取阶段就与 Claim 绑定，而不是文章写完后再补。`render_report.py` 只做确定性转换，不调用模型。
 
-## 13. Audit 模式
+## 14. Audit 模式
 
 Audit 将报告拆成 Claim/Citation 覆盖、引用支持关系、数字日期单位、内部逻辑和跨章节一致性，以及范围遗漏和偏差等独立轨道。每个实际创建的 Track 由独立 subagent 执行，Lead 只负责合并重复 Findings。
 
 如果用户提供完整来源包，可以离线审计。如果只有外部 URL 且环境不能访问，不能把内部一致性检查称为完整 Evidence Audit。
 
-## 14. 确定性脚本
+## 15. 确定性脚本
 
 `validate_run.py` 检查 JSONL、ID、引用关系、Critical Claim 的结构化证据门槛、Claim Marker 和 Open Critical Gap。
 
@@ -174,13 +193,13 @@ Audit 将报告拆成 Claim/Citation 覆盖、引用支持关系、数字日期�
 
 两个脚本只使用 Python 标准库，避免增加安装成本。
 
-## 15. 第一版不做什么
+## 16. 第一版不做什么
 
 第一版不实现搜索 API 封装、通用爬虫、LangGraph、向量数据库、Web UI、自动模型路由、多层 Agent 层级或独立持久化服务。
 
 这些能力由 Codex、Claude Code、Gemini、MCP 或其他宿主提供。只有真实运行证明文件协议不够用时，才把失败频繁的节点升级成工程化硬约束。
 
-## 16. 验证策略
+## 17. 验证策略
 
 Skill 使用官方 Validator 检查 Frontmatter 和目录结构。脚本使用最小 `unittest` 覆盖合法链路的验证与渲染，以及未知 Claim Marker 的失败行为。
 
